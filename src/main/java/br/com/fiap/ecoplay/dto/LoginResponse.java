@@ -1,4 +1,10 @@
+
 package br.com.fiap.ecoplay.dto;
 
-public class LoginResponse {
-}
+public record LoginResponse(
+
+        String token,
+        String tipo,
+        UsuarioResponse usuario
+
+) {}
