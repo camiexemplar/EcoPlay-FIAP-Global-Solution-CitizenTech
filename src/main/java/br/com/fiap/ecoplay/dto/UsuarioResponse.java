@@ -12,6 +12,6 @@ public record UsuarioResponse(
         String email,
         Role role,
         String bairro,
-        LocalDateTime criadoEm
+        LocalDateTime dataCadastro
 
 ) {}

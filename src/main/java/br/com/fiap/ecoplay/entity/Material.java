@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Table(name = "material")
+@Table(name = "material_eco")
 @NoArgsConstructor
 @Entity
 public class Material {
