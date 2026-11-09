@@ -12,5 +12,5 @@ public interface PontoDescarteRepository extends JpaRepository<PontoDescarte, Lo
 
     List<PontoDescarte> findByTipo(TipoPonto tipo);
 
-    List<PontoDescarte> findByCooperativa(Long cooperativa);
+    List<PontoDescarte> findByCooperativaId(Long cooperativaId);
 }
