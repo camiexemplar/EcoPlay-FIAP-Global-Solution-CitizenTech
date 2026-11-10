@@ -4,6 +4,14 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Chaves RSA do JWT
+/keys/
+*.pem
+
+# Variáveis de ambiente
+.env
+.env.local
+
 ### STS ###
 .apt_generated
 .classpath

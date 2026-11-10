@@ -1,120 +1,228 @@
 # ♻️ EcoPlay — Backend Java
 
-**Global Solution 2026/2 | FIAP — CitizenTech**
-
+**FIAP | Global Solution 2026/2 — CitizenTech**  
 **Descarte certo vira ponto — e renda para quem recicla.**
 
 ## 📖 Sobre o projeto
 
-O **EcoPlay** é uma solução CitizenTech voltada à educação ambiental e ao descarte correto de resíduos.
+O **EcoPlay** é uma proposta CitizenTech para incentivar a educação ambiental e o descarte correto de resíduos, aproximando cidadãos, cooperativas e pontos de coleta. A solução contempla informações sobre materiais recicláveis, pontos de descarte, agendamento e acompanhamento de entregas e registro de identificação de resíduos.
 
-O aplicativo busca ajudar cidadãos a identificar materiais recicláveis, aprender como prepará-los para o descarte e encontrar cooperativas e pontos de coleta adequados.
+Este repositório contém a **API REST Java**. A gamificação e a identificação automática por imagem fazem parte da proposta de evolução e integração com outros serviços, mas não estão implementadas neste backend como integrações operacionais na versão analisada.
 
-Além disso, o EcoPlay conecta cidadãos às cooperativas, permitindo o agendamento de entregas de materiais. As entregas podem ser confirmadas, recusadas ou concluídas pelas cooperativas responsáveis.
+### Objetivos
 
-A proposta também inclui inteligência artificial para auxiliar na identificação de resíduos e oferecer orientações sobre descarte correto.
+- Facilitar o acesso a orientações de descarte correto.
+- Apoiar a localização de pontos de coleta.
+- Organizar entregas de recicláveis para cooperativas.
+- Contribuir para os ODS **4, 10, 11 e 13**.
 
-Este repositório contém o **backend principal desenvolvido em Java**, responsável pelas regras de negócio, autenticação, persistência dos dados e integração com os demais serviços da solução.
-
-## 🎯 Objetivo
-
-Promover o descarte correto de resíduos, reduzir a contaminação de materiais recicláveis e contribuir para o trabalho das cooperativas de catadores.
-
-O projeto está relacionado aos Objetivos de Desenvolvimento Sustentável (ODS), especialmente:
-
-- **ODS 4:** Educação de Qualidade
-- **ODS 10:** Redução das Desigualdades
-- **ODS 11:** Cidades e Comunidades Sustentáveis
-- **ODS 13:** Ação Contra a Mudança Global do Clima
-
-## 🚀 Tecnologias
+## 🚀 Tecnologias verificadas
 
 | Tecnologia | Utilização |
 |---|---|
-| Java 21 | Linguagem principal |
-| Spring Boot 3.5 | Desenvolvimento da API REST |
-| Spring Data JPA | Persistência e acesso aos dados |
-| Spring Security | Autenticação e autorização |
-| JWT | Controle de acesso por token |
-| Bean Validation | Validação dos dados |
-| Spring AI | Integração com IA generativa |
-| Spring AMQP | Integração com RabbitMQ |
-| RabbitMQ | Comunicação assíncrona |
-| Azure SQL Database | Banco de dados relacional |
-| Flyway | Versionamento do banco de dados |
-| Swagger / OpenAPI | Documentação dos endpoints |
-| Maven | Gerenciamento de dependências |
-| JUnit | Testes automatizados |
-| Microsoft Azure | Hospedagem da aplicação |
+| Java 21 | Linguagem da API |
+| Spring Boot 4.1.2 | Aplicação REST |
+| Spring Web MVC | Controllers e endpoints |
+| Spring Data JPA / Hibernate | Persistência |
+| Oracle Database | Banco configurado no projeto |
+| Spring Security | Autenticação e regras de acesso |
+| JWT com RSA / RS256 | Emissão e verificação de tokens |
+| BCrypt | Hash de senhas |
+| Bean Validation | Validação dos dados recebidos |
+| Spring Boot Actuator | Monitoramento básico |
+| Maven | Build e dependências |
+| JUnit / Spring Boot Test | Infraestrutura de testes |
 
-## ⚙️ Funcionalidades previstas
+> **Dependências presentes, mas não configuradas como funcionalidades operacionais nesta versão:** Spring AMQP/RabbitMQ, Flyway, componentes OAuth2 Client e bibliotecas de SQL Server. A aplicação está configurada para **Oracle**; Flyway está desativado (`spring.flyway.enabled=false`). Não há integração operacional de IA, mensageria, Swagger ou deploy comprovada nos arquivos analisados. A configuração `management.health.rabbit.enabled=false` desativa o health check do RabbitMQ, não a dependência AMQP.
 
-### Autenticação e usuários
+## ✅ O que está implementado
 
-- Cadastro de cidadãos
-- Login com JWT
-- Controle de acesso por papéis
-- Consulta de informações do perfil
+- Cadastro público de usuários com papel **`CIDADAO`**.
+- Login por e-mail e senha com BCrypt.
+- Emissão de JWT assinado com **RS256**, contendo `userId`, `role`, emissor e expiração de **2 horas**.
+- Leitura e validação dos tokens com chave pública RSA.
+- Consulta pública de materiais recicláveis e pontos de descarte.
+- Controllers, DTOs, services, repositories e entidades para materiais, pontos, entregas e identificações.
+- Regras de negócio para agendar, consultar, reagendar, confirmar, recusar e concluir entregas, além de registrar e confirmar identificações.
+- Tratamento global de exceções da camada MVC, com respostas JSON para erros de validação, recursos inexistentes, conflitos e outros erros.
 
-**Papéis:**
+### 🔐 Estado atual das permissões
 
-- `CIDADAO`: consulta materiais, identifica resíduos e gerencia suas entregas.
-- `COOPERATIVA`: gerencia seus pontos de descarte e as entregas recebidas.
+**Liberados sem autenticação:**
 
-### Materiais recicláveis
+- `POST /api/usuarios/cadastro`
+- `POST /api/auth/login`
+- `GET /api/materiais` e `GET /api/materiais/{id}`
+- `GET /api/pontos-descarte` e `GET /api/pontos-descarte/{id}`
 
-- Cadastro e consulta de materiais
-- Classificação por categoria
-- Orientações de preparação e descarte
-- Pesquisa e paginação
+**Demais endpoints:** as rotas estão implementadas em controllers, porém **bloqueadas pelo `SecurityConfig` atual**, que termina com `.anyRequest().denyAll()`. Mesmo com JWT válido, elas retornam `403 Forbidden` até que sejam criadas as políticas de autorização por papel e proprietário. O papel `COOPERATIVA` existe no domínio, mas o cadastro público aceita somente `CIDADAO`.
 
-### Pontos de descarte
+> O `GlobalExceptionHandler` trata exceções da aplicação. Respostas geradas diretamente pelos filtros do Spring Security, como JWT ausente/inválido ou acesso negado, ainda não têm necessariamente o mesmo formato JSON.
 
-- Cadastro de pontos de coleta
-- Associação de materiais aceitos
-- Consulta por bairro e material
-- Atualização e exclusão por cooperativas autorizadas
+## 🔗 Endpoints existentes
 
-### Entregas
+**URL base local:** `http://localhost:8080`
 
-- Agendamento de entrega pelo cidadão
-- Consulta das próprias entregas
-- Reagendamento e exclusão de agendamentos
-- Confirmação pela cooperativa
-- Recusa com justificativa
-- Conclusão com registro do peso dos materiais
+| Método | Endpoint | Descrição | Acesso atual |
+|---|---|---|---|
+| POST | `/api/usuarios/cadastro` | Cadastrar cidadão | Público |
+| POST | `/api/auth/login` | Autenticar e receber JWT | Público |
+| GET | `/api/usuarios/{id}` | Consultar usuário | Bloqueado |
+| GET | `/api/materiais` | Listar materiais (paginado) | Público |
+| GET | `/api/materiais/{id}` | Consultar material | Público |
+| POST | `/api/materiais` | Cadastrar material | Bloqueado |
+| PUT | `/api/materiais/{id}` | Atualizar material | Bloqueado |
+| DELETE | `/api/materiais/{id}` | Excluir material | Bloqueado |
+| GET | `/api/pontos-descarte` | Listar pontos (paginado) | Público |
+| GET | `/api/pontos-descarte/{id}` | Consultar ponto | Público |
+| POST | `/api/pontos-descarte` | Cadastrar ponto | Bloqueado |
+| PUT | `/api/pontos-descarte/{id}` | Atualizar ponto | Bloqueado |
+| DELETE | `/api/pontos-descarte/{id}` | Excluir ponto | Bloqueado |
+| POST | `/api/entregas?cidadaoId={id}` | Agendar entrega | Bloqueado |
+| GET | `/api/entregas/{id}?cidadaoId={id}` | Consultar entrega | Bloqueado |
+| GET | `/api/entregas/cidadao/{cidadaoId}` | Listar por cidadão | Bloqueado |
+| GET | `/api/entregas/cooperativa/{cooperativaId}` | Listar por cooperativa | Bloqueado |
+| PUT | `/api/entregas/{id}/reagendar?cidadaoId={id}&novaData={AAAA-MM-DD}` | Reagendar | Bloqueado |
+| DELETE | `/api/entregas/{id}?cidadaoId={id}` | Excluir agendamento | Bloqueado |
+| PATCH | `/api/entregas/{id}/confirmar?cooperativaId={id}` | Confirmar | Bloqueado |
+| PATCH | `/api/entregas/{id}/recusar?cooperativaId={id}&motivo={valor}` | Recusar | Bloqueado |
+| PATCH | `/api/entregas/{id}/concluir?cooperativaId={id}` | Concluir | Bloqueado |
+| POST | `/api/identificacoes?usuarioId={id}` | Registrar identificação | Bloqueado |
+| GET | `/api/identificacoes/{id}?usuarioId={id}` | Consultar identificação | Bloqueado |
+| GET | `/api/identificacoes/usuario/{usuarioId}` | Listar identificações | Bloqueado |
+| PATCH | `/api/identificacoes/{id}/confirmar?usuarioId={id}` | Confirmar identificação | Bloqueado |
 
-**Estados da entrega:**
+**Observação:** a existência de um endpoint no controller não significa que ele esteja liberado no Spring Security. Os parâmetros de consulta exibidos são os exigidos nos métodos correspondentes; requisições de criação/atualização também podem exigir JSON no corpo.
 
-`AGENDADA` → `CONFIRMADA` → `CONCLUIDA`
+## 🧪 Exemplos de requisições
 
-Uma entrega também poderá ser marcada como `RECUSADA`, conforme as regras de negócio.
+### Cadastro público
 
-### Inteligência artificial
+`POST http://localhost:8080/api/usuarios/cadastro`
 
-Integração planejada com um serviço de visão computacional para identificação de resíduos por imagem.
+```json
+{
+  "nome": "Camily Teste",
+  "email": "camily.teste@ecoplay.com",
+  "senha": "Senha123!",
+  "role": "CIDADAO",
+  "bairro": "Centro"
+}
+```
 
-O Spring AI será utilizado para gerar orientações de descarte contextualizadas, considerando o material identificado e o guia de descarte do EcoPlay.
+**Sucesso:** `201 Created`. E-mail já cadastrado: `409 Conflict`. O cadastro público de `COOPERATIVA` não é permitido.
 
-### Mensageria
+### Login
 
-Integração planejada com RabbitMQ para publicação e consumo de eventos relacionados à finalização de entregas.
+`POST http://localhost:8080/api/auth/login`
 
-Esses eventos permitirão a comunicação com a API .NET, responsável pela gamificação, incluindo XP e missões.
+```json
+{
+  "email": "camily.teste@ecoplay.com",
+  "senha": "Senha123!"
+}
+```
 
-## 🏗️ Arquitetura
+**Sucesso:** `200 OK`, com `token`, `tipo` (`Bearer`) e dados de `usuario`. Credenciais inválidas: `401 Unauthorized`.
 
-O EcoPlay será composto por diferentes serviços integrados:
+Para futuras rotas autorizadas com JWT, enviar o cabeçalho:
 
-- **API Java:** autenticação, materiais, pontos de descarte, entregas e orientações com IA.
-- **API .NET:** XP, níveis, missões, quiz e ranking.
-- **Serviço Python:** identificação de resíduos por imagem.
-- **Aplicativo Mobile:** interface desenvolvida com React Native e Expo.
-- **RabbitMQ:** comunicação assíncrona entre serviços.
+```http
+Authorization: Bearer SEU_TOKEN
+```
 
-O backend Java será consumido pelo aplicativo Mobile por meio de endpoints REST.
+### Listagem pública
 
-## 📁 Estrutura planejada
+```http
+GET http://localhost:8080/api/materiais
+GET http://localhost:8080/api/pontos-descarte
+```
+
+Essas duas consultas foram verificadas manualmente, com e sem token, durante a preparação da branch.
+
+### Exemplo de erro em JSON
+
+```json
+{
+  "status": 409,
+  "erro": "Conflict",
+  "mensagem": "E-mail já cadastrado no sistema!",
+  "caminho": "/api/usuarios/cadastro"
+}
+```
+
+## 💻 Como executar localmente
+
+### Pré-requisitos
+
+- JDK 21
+- Maven ou Maven Wrapper
+- Acesso a uma instância Oracle compatível
+- OpenSSL para geração das chaves RSA
+
+### 1. Clonar e entrar no projeto
+
+```bash
+git clone https://github.com/camiexemplar/EcoPlay-FIAP-Global-Solution-CitizenTech.git
+cd EcoPlay-FIAP-Global-Solution-CitizenTech
+git switch Security-JWT
+```
+
+### 2. Configurar variáveis de ambiente
+
+A aplicação utiliza as seguintes configurações no `application.properties`:
+
+```properties
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+app.jwt.private-key=file:${JWT_PRIVATE_KEY_PATH:./keys/private_key.pem}
+app.jwt.public-key=file:${JWT_PUBLIC_KEY_PATH:./keys/public_key.pem}
+app.jwt.issuer=ecoplay-api
+```
+
+No IntelliJ, defina `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` em **Run > Edit Configurations > Environment variables**, além dos caminhos das chaves caso não use os valores padrão.
+
+Exemplo de formato da URL Oracle (substitua pelos dados fornecidos para seu ambiente):
+
+```text
+DB_URL=jdbc:oracle:thin:@HOST:1521:SERVICO_OU_SID
+DB_USERNAME=SEU_USUARIO
+DB_PASSWORD=SUA_SENHA
+```
+
+### 3. Gerar as chaves RSA
+
+Na raiz do projeto, com OpenSSL instalado:
+
+```bash
+mkdir keys
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/private_key.pem
+openssl pkey -in keys/private_key.pem -pubout -out keys/public_key.pem
+```
+
+A chave privada é **PKCS#8**, formato esperado pelo código do projeto. Os arquivos `.pem` e o diretório `/keys/` estão no `.gitignore`. **Nunca versione senhas, tokens ou chaves privadas.**
+
+### 4. Compilar e executar
+
+**Windows / PowerShell:**
+
+```powershell
+.\mvnw.cmd clean package
+.\mvnw.cmd spring-boot:run
+```
+
+Se não usar Maven Wrapper, substitua por `mvn clean package` e `mvn spring-boot:run`.
+
+A aplicação utiliza a porta **8080**. Para executar os testes separadamente:
+
+```powershell
+.\mvnw.cmd test
+```
+
+> O comando de testes deve ser executado no ambiente configurado com as dependências necessárias; a existência de testes no repositório não equivale a uma execução bem-sucedida confirmada nesta revisão.
+
+## 📁 Estrutura atual
 
 ```text
 src/
@@ -126,144 +234,24 @@ src/
 │   │   ├── entity/
 │   │   ├── enums/
 │   │   ├── exception/
-│   │   ├── integration/
-│   │   ├── messaging/
 │   │   ├── repository/
 │   │   ├── security/
 │   │   ├── service/
-│   │   └── EcoPlayApplication.java
+│   │   └── EcoplayApplication.java
 │   └── resources/
-│       ├── application.yml
-│       └── db/migration/
+│       └── application.properties
 └── test/
+    └── java/br/com/fiap/ecoplay/
 ```
 
-## 🔗 Endpoints planejados
+## 📌 Próximas etapas
 
-### Autenticação
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/auth/cadastro` | Cadastro de cidadão |
-| POST | `/auth/login` | Autenticação |
-
-### Materiais
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| GET | `/materiais` | Listagem e filtros de materiais |
-
-### Pontos de descarte
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| GET | `/pontos` | Listagem de pontos |
-| POST | `/pontos` | Cadastro de ponto |
-| PUT | `/pontos/{id}` | Atualização de ponto |
-| DELETE | `/pontos/{id}` | Exclusão de ponto |
-
-### Entregas
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/entregas` | Agendar entrega |
-| GET | `/entregas/minhas` | Listar entregas do cidadão |
-| GET | `/entregas/{id}` | Consultar entrega |
-| PUT | `/entregas/{id}` | Reagendar entrega |
-| DELETE | `/entregas/{id}` | Excluir agendamento |
-| GET | `/entregas/recebidas` | Listar entregas da cooperativa |
-| POST | `/entregas/{id}/confirmacao` | Confirmar entrega |
-| POST | `/entregas/{id}/recusa` | Recusar entrega |
-| POST | `/entregas/{id}/conclusao` | Concluir entrega |
-
-### Identificação de resíduos
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/identificacoes` | Identificar resíduo por imagem |
-| PATCH | `/identificacoes/{id}/confirmacao` | Confirmar identificação |
-
-Os endpoints poderão receber o prefixo `/api` conforme a configuração final da aplicação.
-
-## 💻 Como executar
-
-### Pré-requisitos
-
-- Java JDK 21
-- Maven ou Maven Wrapper
-- IntelliJ IDEA ou outra IDE Java
-- Banco de dados SQL Server configurado
-
-### 1. Clonar o repositório
-
-```bash
-git clone URL_DO_REPOSITORIO
-cd ecoplay
-```
-
-### 2. Configurar variáveis de ambiente
-
-As configurações de acesso ao banco serão fornecidas por variáveis de ambiente:
-
-```env
-DB_URL=jdbc:sqlserver://HOST:1433;databaseName=NOME_BANCO;encrypt=true
-DB_USERNAME=USUARIO
-DB_PASSWORD=SENHA
-```
-
-Outras variáveis, como credenciais de IA, JWT e RabbitMQ, serão documentadas conforme a implementação.
-
-**Não adicionar senhas, tokens ou chaves privadas ao repositório.**
-
-### 3. Compilar
-
-No Windows:
-
-```powershell
-.\mvnw.cmd clean compile
-```
-
-### 4. Executar
-
-Após configurar as dependências e o banco:
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-A porta padrão prevista é `8080`.
-
-## 📚 Documentação da API
-
-A documentação interativa será disponibilizada pelo Swagger/OpenAPI após sua configuração.
-
-Endereço local previsto:
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-## 🧪 Testes
-
-O projeto utilizará JUnit para testar as regras de negócio e os comportamentos da API.
-
-Os testes serão integrados ao processo de CI/CD desenvolvido com Azure DevOps.
-
-## ☁️ Deploy
-
-A aplicação terá implantação planejada no Microsoft Azure, com automação por Azure Pipelines.
-
-**URL da API:** a definir.
-
-## 📌 Status do projeto
-
-🚧 **Em desenvolvimento — estrutura inicial.**
-
-As funcionalidades, integrações, testes e configurações de deploy serão adicionados progressivamente.
-
-## 🤖 Uso de inteligência artificial
-
-**Em desenvolvimento**
+1. Implementar permissões por papel e vínculo com o usuário autenticado para os endpoints privados.
+2. Padronizar respostas de erro diretamente no Spring Security (`401` e `403`).
+3. Criar testes automatizados de autenticação, autorização e regras de negócio.
+4. Revisar dependências ainda não utilizadas e definir a estratégia de migração do banco.
+5. Implementar e documentar integrações de IA, gamificação e mensageria conforme o escopo da solução.
+6. Configurar documentação OpenAPI e deploy quando essas etapas forem desenvolvidas.
 
 ## 👩‍💻 Equipe
 
@@ -275,9 +263,7 @@ As funcionalidades, integrações, testes e configurações de deploy serão adi
 | Samara Porto Souza | RM559072 |
 | Maria Gabriela Landim Severo | RM565146 |
 
-**FIAP — Global Solution 2026/2**
-
-**CitizenTech | EcoPlay**
+**FIAP — Global Solution 2026/2 | CitizenTech**
 
 ---
 
