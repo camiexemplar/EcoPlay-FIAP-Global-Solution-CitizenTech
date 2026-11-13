@@ -1,4 +1,3 @@
-[README_EcoPlay_Java_Atualizado.md](https://github.com/user-attachments/files/34775234/README_EcoPlay_Java_Atualizado.md)
 <div align="center">
 
 # ♻️ EcoPlay — Backend Java
