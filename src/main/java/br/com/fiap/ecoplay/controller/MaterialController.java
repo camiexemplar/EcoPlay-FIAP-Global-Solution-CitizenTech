@@ -5,6 +5,7 @@ import br.com.fiap.ecoplay.dto.MaterialRequest;
 import br.com.fiap.ecoplay.dto.MaterialResponse;
 import br.com.fiap.ecoplay.service.MaterialService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ public class MaterialController {
     private final MaterialService materialService;
 
     @PostMapping
+    @PreAuthorize("hasRole('COOPERATIVA')")
     public ResponseEntity<MaterialResponse> cadastrar(
             @Valid @RequestBody MaterialRequest request) {
 
@@ -49,6 +51,7 @@ public class MaterialController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('COOPERATIVA')")
     public ResponseEntity<MaterialResponse> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody MaterialRequest request) {
@@ -59,6 +62,7 @@ public class MaterialController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('COOPERATIVA')")
     public ResponseEntity<Void> excluir(
             @PathVariable Long id) {
 

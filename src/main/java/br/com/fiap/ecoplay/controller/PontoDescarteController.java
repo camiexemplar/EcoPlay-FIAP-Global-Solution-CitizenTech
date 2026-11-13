@@ -5,6 +5,7 @@ import br.com.fiap.ecoplay.dto.PontoDescarteRequest;
 import br.com.fiap.ecoplay.dto.PontoDescarteResponse;
 import br.com.fiap.ecoplay.service.PontoDescarteService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ public class PontoDescarteController {
     private final PontoDescarteService pontoDescarteService;
 
     @PostMapping
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.proprioUsuario(#p0.cooperativaId())")
     public ResponseEntity<PontoDescarteResponse> cadastrar(
             @Valid @RequestBody PontoDescarteRequest request) {
 
@@ -50,6 +52,7 @@ public class PontoDescarteController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.pontoDaCooperativa(#p0) and @acessoUsuarioService.proprioUsuario(#p1.cooperativaId())")
     public ResponseEntity<PontoDescarteResponse> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody PontoDescarteRequest request) {
@@ -60,6 +63,7 @@ public class PontoDescarteController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.pontoDaCooperativa(#p0)")
     public ResponseEntity<Void> excluir(
             @PathVariable Long id) {
 

@@ -4,6 +4,7 @@ import br.com.fiap.ecoplay.dto.CadastroUsuarioRequest;
 import br.com.fiap.ecoplay.dto.UsuarioResponse;
 import br.com.fiap.ecoplay.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<UsuarioResponse> buscarPorId(
             @PathVariable Long id) {
 

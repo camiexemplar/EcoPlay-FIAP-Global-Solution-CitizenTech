@@ -6,6 +6,7 @@ import br.com.fiap.ecoplay.dto.IdentificacaoRequest;
 import br.com.fiap.ecoplay.dto.IdentificacaoResponse;
 import br.com.fiap.ecoplay.service.IdentificacaoService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ public class IdentificacaoController {
     private final IdentificacaoService identificacaoService;
 
     @PostMapping
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<IdentificacaoResponse> registrar(
             @RequestParam Long usuarioId,
             @Valid @RequestBody IdentificacaoRequest request) {
@@ -34,6 +36,7 @@ public class IdentificacaoController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<IdentificacaoResponse> buscarPorId(
             @PathVariable Long id,
             @RequestParam Long usuarioId) {
@@ -44,6 +47,7 @@ public class IdentificacaoController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<Page<IdentificacaoResponse>> listarPorUsuario(
             @PathVariable Long usuarioId,
             Pageable pageable) {
@@ -55,6 +59,7 @@ public class IdentificacaoController {
     }
 
     @PatchMapping("/{id}/confirmar")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<IdentificacaoResponse> confirmar(
             @PathVariable Long id,
             @RequestParam Long usuarioId,

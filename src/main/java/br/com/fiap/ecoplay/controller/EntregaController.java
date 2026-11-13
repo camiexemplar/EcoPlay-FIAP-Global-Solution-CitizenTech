@@ -6,6 +6,7 @@ import br.com.fiap.ecoplay.dto.EntregaResponse;
 import br.com.fiap.ecoplay.enums.MotivoRecusa;
 import br.com.fiap.ecoplay.service.EntregaService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ public class EntregaController {
     private final EntregaService entregaService;
 
     @PostMapping
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<EntregaResponse> agendar(
             @RequestParam Long cidadaoId,
             @Valid @RequestBody EntregaRequest request) {
@@ -37,6 +39,7 @@ public class EntregaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<EntregaResponse> buscarPorId(
             @PathVariable Long id,
             @RequestParam Long cidadaoId) {
@@ -46,6 +49,7 @@ public class EntregaController {
     }
 
     @GetMapping("/cidadao/{cidadaoId}")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<Page<EntregaResponse>> listarPorCidadao(
             @PathVariable Long cidadaoId,
             Pageable pageable) {
@@ -56,6 +60,7 @@ public class EntregaController {
     }
 
     @GetMapping("/cooperativa/{cooperativaId}")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.proprioUsuario(#p0)")
     public ResponseEntity<Page<EntregaResponse>> listarPorCooperativa(
             @PathVariable Long cooperativaId,
             Pageable pageable) {
@@ -66,6 +71,7 @@ public class EntregaController {
     }
 
     @PutMapping("/{id}/reagendar")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<EntregaResponse> reagendar(
             @PathVariable Long id,
             @RequestParam Long cidadaoId,
@@ -79,6 +85,7 @@ public class EntregaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('CIDADAO') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<Void> excluirAgendamento(
             @PathVariable Long id,
             @RequestParam Long cidadaoId) {
@@ -89,6 +96,7 @@ public class EntregaController {
     }
 
     @PatchMapping("/{id}/confirmar")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<EntregaResponse> confirmar(
             @PathVariable Long id,
             @RequestParam Long cooperativaId) {
@@ -98,6 +106,7 @@ public class EntregaController {
     }
 
     @PatchMapping("/{id}/recusar")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<EntregaResponse> recusar(
             @PathVariable Long id,
             @RequestParam Long cooperativaId,
@@ -110,6 +119,7 @@ public class EntregaController {
     }
 
     @PatchMapping("/{id}/concluir")
+    @PreAuthorize("hasRole('COOPERATIVA') and @acessoUsuarioService.proprioUsuario(#p1)")
     public ResponseEntity<EntregaResponse> concluir(
             @PathVariable Long id,
             @RequestParam Long cooperativaId) {
