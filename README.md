@@ -1,270 +1,359 @@
+[README_EcoPlay_Java_Atualizado.md](https://github.com/user-attachments/files/34775234/README_EcoPlay_Java_Atualizado.md)
+<div align="center">
+
 # ♻️ EcoPlay — Backend Java
 
-**FIAP | Global Solution 2026/2 — CitizenTech**  
+**Global Solution 2026/2 | FIAP — CitizenTech**
+
 **Descarte certo vira ponto — e renda para quem recicla.**
+
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.2-brightgreen?style=for-the-badge&logo=springboot&logoColor=white)
+![Oracle](https://img.shields.io/badge/Oracle-Database-red?style=for-the-badge&logo=oracle&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring_Security-JWT-green?style=for-the-badge&logo=springsecurity&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-Migrations-blue?style=for-the-badge)
+
+</div>
 
 ## 📖 Sobre o projeto
 
-O **EcoPlay** é uma proposta CitizenTech para incentivar a educação ambiental e o descarte correto de resíduos, aproximando cidadãos, cooperativas e pontos de coleta. A solução contempla informações sobre materiais recicláveis, pontos de descarte, agendamento e acompanhamento de entregas e registro de identificação de resíduos.
+O **EcoPlay** é uma solução CitizenTech que incentiva a educação ambiental e o descarte correto de materiais recicláveis. A proposta conecta cidadãos e cooperativas, oferece informações sobre os materiais e seus cuidados de preparação, facilita a localização de pontos de descarte e permite agendar entregas.
 
-Este repositório contém a **API REST Java**. A gamificação e a identificação automática por imagem fazem parte da proposta de evolução e integração com outros serviços, mas não estão implementadas neste backend como integrações operacionais na versão analisada.
+Este repositório contém a **API REST desenvolvida em Java**, responsável pelo cadastro e autenticação dos usuários, catálogo de materiais, pontos de descarte, entregas, histórico de identificações e persistência dos dados.
 
-### Objetivos
+A solução completa também prevê um aplicativo mobile, um microsserviço Python para reconhecimento de materiais por imagem e uma API .NET para gamificação. **Esses serviços são componentes separados; o funcionamento de suas integrações deve ser validado independentemente dos testes da API Java.**
 
-- Facilitar o acesso a orientações de descarte correto.
-- Apoiar a localização de pontos de coleta.
-- Organizar entregas de recicláveis para cooperativas.
-- Contribuir para os ODS **4, 10, 11 e 13**.
+## 🎯 Objetivos
 
-## 🚀 Tecnologias verificadas
+- Incentivar a separação e o descarte correto dos resíduos.
+- Facilitar o acesso a orientações sobre reciclagem e preparação dos materiais.
+- Aproximar cidadãos e cooperativas por meio dos pontos de coleta e agendamentos.
+- Permitir o acompanhamento das entregas e do histórico de identificações.
+- Preparar a plataforma para reconhecimento por IA e recompensas por ações sustentáveis.
 
-| Tecnologia | Utilização |
+O projeto se relaciona especialmente com os **ODS 4, 10, 11, 12 e 13** da ONU.
+
+## 🛠️ Tecnologias utilizadas no backend
+
+| Tecnologia | Finalidade |
 |---|---|
-| Java 21 | Linguagem da API |
-| Spring Boot 4.1.2 | Aplicação REST |
-| Spring Web MVC | Controllers e endpoints |
-| Spring Data JPA / Hibernate | Persistência |
-| Oracle Database | Banco configurado no projeto |
-| Spring Security | Autenticação e regras de acesso |
-| JWT com RSA / RS256 | Emissão e verificação de tokens |
-| BCrypt | Hash de senhas |
+| Java 21 | Linguagem principal |
+| Spring Boot 4.1.2 | API REST |
+| Spring Web MVC | Controllers e requisições HTTP |
+| Spring Data JPA / Hibernate | Persistência de entidades |
+| Spring Security | Autenticação e autorização |
+| JWT com RSA | Tokens de acesso assinados |
 | Bean Validation | Validação dos dados recebidos |
-| Spring Boot Actuator | Monitoramento básico |
-| Maven | Build e dependências |
-| JUnit / Spring Boot Test | Infraestrutura de testes |
+| Oracle Database | Banco de dados relacional |
+| Flyway | Versionamento do esquema do banco |
+| HikariCP | Pool de conexões |
+| Spring AMQP / RabbitMQ | Dependência para mensageria e integração futura |
+| Maven Wrapper | Gerenciamento e execução do projeto |
+| Postman | Testes manuais dos endpoints |
 
-> **Dependências presentes, mas não configuradas como funcionalidades operacionais nesta versão:** Spring AMQP/RabbitMQ, Flyway, componentes OAuth2 Client e bibliotecas de SQL Server. A aplicação está configurada para **Oracle**; Flyway está desativado (`spring.flyway.enabled=false`). Não há integração operacional de IA, mensageria, Swagger ou deploy comprovada nos arquivos analisados. A configuração `management.health.rabbit.enabled=false` desativa o health check do RabbitMQ, não a dependência AMQP.
+> **Nota:** ter a dependência do RabbitMQ no projeto não significa que a publicação e o consumo de eventos entre serviços já foram validados. O mesmo vale para a integração com IA e gamificação.
 
-## ✅ O que está implementado
+## ✅ Funcionalidades do backend Java
 
-- Cadastro público de usuários com papel **`CIDADAO`**.
-- Login por e-mail e senha com BCrypt.
-- Emissão de JWT assinado com **RS256**, contendo `userId`, `role`, emissor e expiração de **2 horas**.
-- Leitura e validação dos tokens com chave pública RSA.
-- Consulta pública de materiais recicláveis e pontos de descarte.
-- Controllers, DTOs, services, repositories e entidades para materiais, pontos, entregas e identificações.
-- Regras de negócio para agendar, consultar, reagendar, confirmar, recusar e concluir entregas, além de registrar e confirmar identificações.
-- Tratamento global de exceções da camada MVC, com respostas JSON para erros de validação, recursos inexistentes, conflitos e outros erros.
+### Autenticação e usuários
 
-### 🔐 Estado atual das permissões
+- Cadastro público de cidadãos.
+- Login por e-mail e senha, com emissão de JWT.
+- Senhas armazenadas com hash BCrypt.
+- Papéis `CIDADAO` e `COOPERATIVA`.
+- Consulta de dados do próprio usuário, com autorização baseada na identidade do token.
 
-**Liberados sem autenticação:**
+### Materiais recicláveis
 
-- `POST /api/usuarios/cadastro`
-- `POST /api/auth/login`
-- `GET /api/materiais` e `GET /api/materiais/{id}`
-- `GET /api/pontos-descarte` e `GET /api/pontos-descarte/{id}`
+- Cadastro, listagem, consulta por ID, atualização e exclusão.
+- Categoria, reciclabilidade, instruções de preparação e classe utilizada na classificação.
+- Consulta pública; operações de alteração protegidas por perfil.
 
-**Demais endpoints:** as rotas estão implementadas em controllers, porém **bloqueadas pelo `SecurityConfig` atual**, que termina com `.anyRequest().denyAll()`. Mesmo com JWT válido, elas retornam `403 Forbidden` até que sejam criadas as políticas de autorização por papel e proprietário. O papel `COOPERATIVA` existe no domínio, mas o cadastro público aceita somente `CIDADAO`.
+### Pontos de descarte
 
-> O `GlobalExceptionHandler` trata exceções da aplicação. Respostas geradas diretamente pelos filtros do Spring Security, como JWT ausente/inválido ou acesso negado, ainda não têm necessariamente o mesmo formato JSON.
+- Cadastro, listagem, consulta por ID, atualização e exclusão.
+- Endereço, bairro, horário, tipo de ponto, cooperativa responsável e materiais aceitos.
+- Verificação de permissões para operações de alteração.
 
-## 🔗 Endpoints existentes
+### Entregas
 
-**URL base local:** `http://localhost:8080`
+- Agendamento de entrega com itens e respectivos pesos.
+- Consulta por ID e histórico por cidadão ou cooperativa.
+- Reagendamento e exclusão conforme regras de negócio.
+- Confirmação, recusa e conclusão pela cooperativa responsável.
+- Controle do fluxo por status da entrega.
 
-| Método | Endpoint | Descrição | Acesso atual |
-|---|---|---|---|
-| POST | `/api/usuarios/cadastro` | Cadastrar cidadão | Público |
-| POST | `/api/auth/login` | Autenticar e receber JWT | Público |
-| GET | `/api/usuarios/{id}` | Consultar usuário | Bloqueado |
-| GET | `/api/materiais` | Listar materiais (paginado) | Público |
-| GET | `/api/materiais/{id}` | Consultar material | Público |
-| POST | `/api/materiais` | Cadastrar material | Bloqueado |
-| PUT | `/api/materiais/{id}` | Atualizar material | Bloqueado |
-| DELETE | `/api/materiais/{id}` | Excluir material | Bloqueado |
-| GET | `/api/pontos-descarte` | Listar pontos (paginado) | Público |
-| GET | `/api/pontos-descarte/{id}` | Consultar ponto | Público |
-| POST | `/api/pontos-descarte` | Cadastrar ponto | Bloqueado |
-| PUT | `/api/pontos-descarte/{id}` | Atualizar ponto | Bloqueado |
-| DELETE | `/api/pontos-descarte/{id}` | Excluir ponto | Bloqueado |
-| POST | `/api/entregas?cidadaoId={id}` | Agendar entrega | Bloqueado |
-| GET | `/api/entregas/{id}?cidadaoId={id}` | Consultar entrega | Bloqueado |
-| GET | `/api/entregas/cidadao/{cidadaoId}` | Listar por cidadão | Bloqueado |
-| GET | `/api/entregas/cooperativa/{cooperativaId}` | Listar por cooperativa | Bloqueado |
-| PUT | `/api/entregas/{id}/reagendar?cidadaoId={id}&novaData={AAAA-MM-DD}` | Reagendar | Bloqueado |
-| DELETE | `/api/entregas/{id}?cidadaoId={id}` | Excluir agendamento | Bloqueado |
-| PATCH | `/api/entregas/{id}/confirmar?cooperativaId={id}` | Confirmar | Bloqueado |
-| PATCH | `/api/entregas/{id}/recusar?cooperativaId={id}&motivo={valor}` | Recusar | Bloqueado |
-| PATCH | `/api/entregas/{id}/concluir?cooperativaId={id}` | Concluir | Bloqueado |
-| POST | `/api/identificacoes?usuarioId={id}` | Registrar identificação | Bloqueado |
-| GET | `/api/identificacoes/{id}?usuarioId={id}` | Consultar identificação | Bloqueado |
-| GET | `/api/identificacoes/usuario/{usuarioId}` | Listar identificações | Bloqueado |
-| PATCH | `/api/identificacoes/{id}/confirmar?usuarioId={id}` | Confirmar identificação | Bloqueado |
+### Identificações
 
-**Observação:** a existência de um endpoint no controller não significa que ele esteja liberado no Spring Security. Os parâmetros de consulta exibidos são os exigidos nos métodos correspondentes; requisições de criação/atualização também podem exigir JSON no corpo.
+- Registro de uma identificação associada ao cidadão e ao material.
+- Armazenamento do nível de confiança informado.
+- Consulta por ID e histórico por usuário.
+- Confirmação do resultado pelo cidadão.
+
+> **Importante:** os endpoints Java de identificação registram e consultam resultados. Eles **não comprovam, por si só, o envio de uma imagem para o microsserviço Python**.
+
+## 🔐 Segurança
+
+A API utiliza **Spring Security com JWT assinado por chaves RSA**, sessões stateless e autorização por métodos com `@EnableMethodSecurity` e `@PreAuthorize`.
+
+- **Públicos:** cadastro, login, consulta de materiais e consulta de pontos de descarte.
+- **Cidadão autenticado:** acesso às próprias informações, identificações e entregas permitidas.
+- **Cooperativa autenticada:** operações administrativas autorizadas e tratamento das entregas destinadas à cooperativa.
+- **Autorização por identidade:** verificações relacionam o usuário autenticado aos recursos solicitados, evitando confiar somente nos IDs enviados na URL ou no corpo.
+
+Os retornos HTTP tratados incluem validações (`400`), ausência de autenticação (`401`), acesso negado (`403`), recurso não encontrado (`404`) e conflitos de dados ou estado (`409`), além de falhas internas (`500`).
+
+## 🔗 Endpoints da API
+
+**Base local:** `http://localhost:8080`
+
+### Autenticação e usuários
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/usuarios/cadastro` | Cadastrar cidadão |
+| POST | `/api/auth/login` | Autenticar e receber JWT |
+| GET | `/api/usuarios/{id}` | Consultar dados do próprio usuário |
+
+### Materiais
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/materiais` | Criar material |
+| GET | `/api/materiais` | Listar materiais |
+| GET | `/api/materiais/{id}` | Consultar material |
+| PUT | `/api/materiais/{id}` | Atualizar material |
+| DELETE | `/api/materiais/{id}` | Excluir material |
+
+### Pontos de descarte
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/pontos-descarte` | Criar ponto |
+| GET | `/api/pontos-descarte` | Listar pontos |
+| GET | `/api/pontos-descarte/{id}` | Consultar ponto |
+| PUT | `/api/pontos-descarte/{id}` | Atualizar ponto |
+| DELETE | `/api/pontos-descarte/{id}` | Excluir ponto |
+
+### Entregas
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/entregas?cidadaoId={id}` | Agendar entrega |
+| GET | `/api/entregas/{id}?cidadaoId={id}` | Consultar entrega |
+| GET | `/api/entregas/cidadao/{id}` | Listar entregas do cidadão |
+| GET | `/api/entregas/cooperativa/{id}` | Listar entregas da cooperativa |
+| PUT | `/api/entregas/{id}/reagendar?cidadaoId={id}` | Reagendar entrega |
+| DELETE | `/api/entregas/{id}?cidadaoId={id}` | Excluir agendamento |
+| PATCH | `/api/entregas/{id}/confirmar?cooperativaId={id}` | Confirmar entrega |
+| PATCH | `/api/entregas/{id}/recusar?cooperativaId={id}` | Recusar entrega |
+| PATCH | `/api/entregas/{id}/concluir?cooperativaId={id}` | Concluir entrega |
+
+> A operação de recusa também utiliza parâmetros de motivo e, opcionalmente, observação, de acordo com o controller.
+
+### Identificações
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/identificacoes?usuarioId={id}` | Registrar identificação |
+| GET | `/api/identificacoes/{id}?usuarioId={id}` | Consultar identificação |
+| GET | `/api/identificacoes/usuario/{id}` | Listar identificações do usuário |
+| PATCH | `/api/identificacoes/{id}/confirmar?usuarioId={id}` | Confirmar identificação |
+
+**Total: 26 endpoints REST.** Alguns endpoints requerem corpo JSON e outros parâmetros conforme os DTOs e controllers.
 
 ## 🧪 Exemplos de requisições
 
-### Cadastro público
+### Cadastro de cidadão
 
-`POST http://localhost:8080/api/usuarios/cadastro`
+`POST /api/usuarios/cadastro`
 
 ```json
 {
-  "nome": "Camily Teste",
-  "email": "camily.teste@ecoplay.com",
-  "senha": "Senha123!",
+  "nome": "Maria Silva",
+  "email": "maria.ecoplay@example.com",
+  "senha": "SenhaForte123!",
   "role": "CIDADAO",
-  "bairro": "Centro"
+  "bairro": "Jardins"
 }
 ```
-
-**Sucesso:** `201 Created`. E-mail já cadastrado: `409 Conflict`. O cadastro público de `COOPERATIVA` não é permitido.
 
 ### Login
 
-`POST http://localhost:8080/api/auth/login`
+`POST /api/auth/login`
 
 ```json
 {
-  "email": "camily.teste@ecoplay.com",
-  "senha": "Senha123!"
+  "email": "maria.ecoplay@example.com",
+  "senha": "SenhaForte123!"
 }
 ```
 
-**Sucesso:** `200 OK`, com `token`, `tipo` (`Bearer`) e dados de `usuario`. Credenciais inválidas: `401 Unauthorized`.
+Para rotas privadas, utilize no Postman **Authorization → Bearer Token** e informe o token retornado no login.
 
-Para futuras rotas autorizadas com JWT, enviar o cabeçalho:
+### Cadastro de ponto de descarte
 
-```http
-Authorization: Bearer SEU_TOKEN
-```
-
-### Listagem pública
-
-```http
-GET http://localhost:8080/api/materiais
-GET http://localhost:8080/api/pontos-descarte
-```
-
-Essas duas consultas foram verificadas manualmente, com e sem token, durante a preparação da branch.
-
-### Exemplo de erro em JSON
+`POST /api/pontos-descarte` — exige autenticação de cooperativa autorizada.
 
 ```json
 {
-  "status": 409,
-  "erro": "Conflict",
-  "mensagem": "E-mail já cadastrado no sistema!",
-  "caminho": "/api/usuarios/cadastro"
+  "nome": "Ecoponto Central",
+  "tipo": "ECOPONTO",
+  "endereco": "Avenida Exemplo, 200",
+  "bairro": "Jardins",
+  "horario": "Sáb 08-12",
+  "cooperativaId": 1,
+  "materiaisAceitosIds": [1]
 }
 ```
 
-## 💻 Como executar localmente
+Os IDs acima são apenas exemplos: devem existir no banco, e o `cooperativaId` deve corresponder à cooperativa autenticada.
+
+## ▶️ Como executar localmente
 
 ### Pré-requisitos
 
-- JDK 21
-- Maven ou Maven Wrapper
-- Acesso a uma instância Oracle compatível
-- OpenSSL para geração das chaves RSA
+- JDK 21.
+- Acesso a uma instância Oracle compatível.
+- IntelliJ IDEA ou outra IDE Java (opcional).
+- Git; Maven Wrapper já incluído no repositório.
+- OpenSSL, para gerar as chaves RSA caso ainda não existam.
 
-### 1. Clonar e entrar no projeto
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/camiexemplar/EcoPlay-FIAP-Global-Solution-CitizenTech.git
 cd EcoPlay-FIAP-Global-Solution-CitizenTech
-git switch Security-JWT
 ```
 
-### 2. Configurar variáveis de ambiente
+### 2. Configurar as variáveis de ambiente
 
-A aplicação utiliza as seguintes configurações no `application.properties`:
+O `application.properties` lê estas variáveis:
 
-```properties
-spring.datasource.url=${DB_URL}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-app.jwt.private-key=file:${JWT_PRIVATE_KEY_PATH:./keys/private_key.pem}
-app.jwt.public-key=file:${JWT_PUBLIC_KEY_PATH:./keys/public_key.pem}
-app.jwt.issuer=ecoplay-api
-```
+| Variável | Descrição |
+|---|---|
+| `DB_URL` | URL JDBC do banco Oracle |
+| `DB_USERNAME` | Usuário do Oracle |
+| `DB_PASSWORD` | Senha do Oracle |
+| `JWT_PRIVATE_KEY_PATH` | Caminho da chave privada RSA em PEM |
+| `JWT_PUBLIC_KEY_PATH` | Caminho da chave pública RSA em PEM |
 
-No IntelliJ, defina `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` em **Run > Edit Configurations > Environment variables**, além dos caminhos das chaves caso não use os valores padrão.
-
-Exemplo de formato da URL Oracle (substitua pelos dados fornecidos para seu ambiente):
+Exemplo de URL JDBC (substitua pelos dados fornecidos para seu ambiente):
 
 ```text
-DB_URL=jdbc:oracle:thin:@HOST:1521:SERVICO_OU_SID
-DB_USERNAME=SEU_USUARIO
-DB_PASSWORD=SUA_SENHA
+jdbc:oracle:thin:@//HOST:1521/SERVICO
 ```
 
-### 3. Gerar as chaves RSA
-
-Na raiz do projeto, com OpenSSL instalado:
+**Não publique senhas, tokens ou chaves privadas no GitHub.** As chaves RSA podem ser geradas localmente com OpenSSL:
 
 ```bash
-mkdir keys
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/private_key.pem
-openssl pkey -in keys/private_key.pem -pubout -out keys/public_key.pem
+mkdir -p keys
+openssl genrsa -out keys/private_key.pem 2048
+openssl rsa -in keys/private_key.pem -pubout -out keys/public_key.pem
 ```
 
-A chave privada é **PKCS#8**, formato esperado pelo código do projeto. Os arquivos `.pem` e o diretório `/keys/` estão no `.gitignore`. **Nunca versione senhas, tokens ou chaves privadas.**
+Os comandos acima utilizam um terminal compatível com Bash. No Windows, crie a pasta `keys` e execute os comandos OpenSSL no terminal de sua preferência.
 
-### 4. Compilar e executar
+> O projeto utiliza `file:${JWT_PRIVATE_KEY_PATH:./keys/private_key.pem}` e `file:${JWT_PUBLIC_KEY_PATH:./keys/public_key.pem}`. Ajuste os caminhos se armazenar as chaves em outro diretório.
 
-**Windows / PowerShell:**
+### 3. Banco de dados e Flyway
+
+O projeto utiliza **Oracle Database** e migrations em:
+
+```text
+src/main/resources/db/migration/
+```
+
+Na configuração atual, o Hibernate usa `ddl-auto=validate`; a criação e evolução do esquema ficam sob responsabilidade do Flyway. A configuração de baseline foi utilizada para adaptação ao schema Oracle de desenvolvimento já existente. Em um banco novo, revise essa configuração conforme a estratégia de migração adotada.
+
+### 4. Executar a API
+
+No Windows (PowerShell):
 
 ```powershell
-.\mvnw.cmd clean package
 .\mvnw.cmd spring-boot:run
 ```
 
-Se não usar Maven Wrapper, substitua por `mvn clean package` e `mvn spring-boot:run`.
+No Linux/macOS:
 
-A aplicação utiliza a porta **8080**. Para executar os testes separadamente:
-
-```powershell
-.\mvnw.cmd test
+```bash
+./mvnw spring-boot:run
 ```
 
-> O comando de testes deve ser executado no ambiente configurado com as dependências necessárias; a existência de testes no repositório não equivale a uma execução bem-sucedida confirmada nesta revisão.
+Com a aplicação iniciada, utilize a URL local `http://localhost:8080` no Postman.
 
-## 📁 Estrutura atual
+## 🧪 Testes realizados
+
+Foram realizados **testes manuais pelo Postman**, incluindo fluxos de cadastro e login, autenticação JWT, autorização por perfil e identidade, CRUD de materiais e pontos de descarte, operações de entregas e identificações e tratamento de erros HTTP.
+
+Os cenários executados no ambiente de desenvolvimento foram **confirmados como aprovados pela equipe**. Esses testes não equivalem a uma validação automática de integração ponta a ponta com Python, .NET ou RabbitMQ.
+
+## 🏗️ Arquitetura da solução
 
 ```text
-src/
-├── main/
-│   ├── java/br/com/fiap/ecoplay/
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── dto/
-│   │   ├── entity/
-│   │   ├── enums/
-│   │   ├── exception/
-│   │   ├── repository/
-│   │   ├── security/
-│   │   ├── service/
-│   │   └── EcoplayApplication.java
-│   └── resources/
-│       └── application.properties
-└── test/
-    └── java/br/com/fiap/ecoplay/
+Aplicativo Mobile (React Native / Expo)
+                 |
+                 | HTTP / REST
+                 v
+       Backend Java / Spring Boot
+       |     |       |        |
+       |     |       |        +-- Autenticação JWT / RSA
+       |     |       +----------- Entregas e identificações
+       |     +------------------- Materiais e pontos de descarte
+       +------------------------- Oracle / JPA / Flyway
+
+Integrações da solução (serviços separados):
+  - Python / visão computacional: classificação de resíduos
+  - .NET: pontos, XP, conquistas e recompensas
+  - RabbitMQ: comunicação assíncrona entre serviços
 ```
 
-## 📌 Próximas etapas
+### Situação das integrações
 
-1. Implementar permissões por papel e vínculo com o usuário autenticado para os endpoints privados.
-2. Padronizar respostas de erro diretamente no Spring Security (`401` e `403`).
-3. Criar testes automatizados de autenticação, autorização e regras de negócio.
-4. Revisar dependências ainda não utilizadas e definir a estratégia de migração do banco.
-5. Implementar e documentar integrações de IA, gamificação e mensageria conforme o escopo da solução.
-6. Configurar documentação OpenAPI e deploy quando essas etapas forem desenvolvidas.
+- **Java:** endpoints e regras de negócio testados manualmente pelo Postman.
+- **Python:** reconhecimento de resíduos por imagem previsto na arquitetura; integração ponta a ponta a validar.
+- **.NET:** gamificação e recompensas previstas na arquitetura; integração ponta a ponta a validar.
+- **RabbitMQ:** dependência presente no backend; publicação/consumo de eventos entre serviços ainda exige validação específica.
+- **Mobile:** aplicação cliente prevista para consumir a API REST.
 
-## 👩‍💻 Equipe
+## 📂 Organização do código
+
+```text
+src/main/
+├── java/br/com/fiap/ecoplay/
+│   ├── config/
+│   ├── controller/
+│   ├── dto/
+│   ├── entity/
+│   ├── enums/
+│   ├── exception/
+│   ├── repository/
+│   ├── security/
+│   ├── service/
+│   └── EcoPlayApplication.java
+└── resources/
+    ├── application.properties
+    └── db/migration/
+```
+
+## 👥 Equipe
+
+**FIAP — Turma 2TDSPX**
 
 | Integrante | RM |
 |---|---|
 | Eduarda Weiss Ventura | RM564434 |
 | Camily Vitoria Pereira Maciel | RM566520 |
 | Lucas Nunes Soares | RM566503 |
-| Samara Porto Souza | RM559072 |
-| Maria Gabriela Landim Severo | RM565146 |
 
-**FIAP — Global Solution 2026/2 | CitizenTech**
+## 📌 Repositório
+
+[EcoPlay — Global Solution CitizenTech](https://github.com/camiexemplar/EcoPlay-FIAP-Global-Solution-CitizenTech)
 
 ---
 
-*Projeto acadêmico desenvolvido para a Global Solution da FIAP.*
+<div align="center">
+
+**EcoPlay ♻️ — tecnologia, cidadania e reciclagem em uma só solução.**
+
+</div>
