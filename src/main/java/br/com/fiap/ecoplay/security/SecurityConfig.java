@@ -1,3 +1,4 @@
+
 package br.com.fiap.ecoplay.security;
 
 import jakarta.servlet.DispatcherType;
@@ -22,12 +23,24 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
                                 "/api/usuarios/cadastro").permitAll()
+
                         .requestMatchers(HttpMethod.GET,
-                                "/api/materiais", "/api/materiais/**",
-                                "/api/pontos-descarte", "/api/pontos-descarte/**").permitAll()
+                                "/api/materiais",
+                                "/api/materiais/**",
+                                "/api/pontos-descarte",
+                                "/api/pontos-descarte/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable())
