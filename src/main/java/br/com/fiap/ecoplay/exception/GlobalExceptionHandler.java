@@ -12,12 +12,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> tratarAcessoNegadoSpring(
+            AccessDeniedException exception,
+            HttpServletRequest request) {
+
+        return criarResposta(
+                403,
+                "Você não tem permissão para realizar esta operação",
+                request
+        );
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> tratarErroHttp(
@@ -44,7 +59,7 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .map(erro -> erro.getDefaultMessage())
-                .filter(msg -> msg != null)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse("Dados inválidos");
 
@@ -144,6 +159,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> tratarErroInterno(
             Exception exception,
             HttpServletRequest request) {
+
+        exception.printStackTrace();
 
         return criarResposta(
                 500,
