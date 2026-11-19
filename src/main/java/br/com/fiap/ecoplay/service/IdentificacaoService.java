@@ -24,6 +24,7 @@ public class IdentificacaoService {
     private final IdentificacaoRepository identificacaoRepository;
     private final MaterialRepository materialRepository;
     private final UsuarioRepository usuarioRepository;
+    private final GamificacaoClient gamificacaoClient;
 
     @Transactional
     public IdentificacaoResponse registrar(
@@ -90,8 +91,13 @@ public class IdentificacaoService {
 
         identificacao.setConfirmadaPeloUsuario(
                 request.confirmadaPeloUsuario());
+        Identificacao salva = identificacaoRepository.save(identificacao);
 
-        return converter(identificacaoRepository.save(identificacao));
+        if (Boolean.TRUE.equals(salva.getConfirmadaPeloUsuario())) {
+            gamificacaoClient.creditarIdentificacao(salva.getId(), salva.getUsuario().getId());
+        }
+
+        return converter(salva);
     }
 
     private Identificacao buscarEntidade(Long id) {

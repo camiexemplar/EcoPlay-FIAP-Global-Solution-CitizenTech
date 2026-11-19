@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,9 @@ public class JwtService {
 
     @Value("${app.jwt.issuer}")
     private String issuer;
+
+    @Value("${app.jwt.audience}")
+    private String audience;
 
     public String gerarToken(Usuario usuario) {
 
@@ -33,7 +37,9 @@ public class JwtService {
                 .expiresAt(agora.plus(Duration.ofHours(2)))
                 .subject(usuario.getEmail())
                 .claim("userId", usuario.getId())
+                .audience(List.of(audience))
                 .claim("role", usuario.getRole().name())
+                .claim("papel", usuario.getRole().name())
                 .build();
 
         JwsHeader header = JwsHeader

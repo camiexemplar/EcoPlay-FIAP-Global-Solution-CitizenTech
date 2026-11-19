@@ -1,6 +1,7 @@
 package br.com.fiap.ecoplay.service;
 import br.com.fiap.ecoplay.dto.*;
 import br.com.fiap.ecoplay.entity.*;
+import br.com.fiap.ecoplay.enums.CategoriaMaterial;
 import br.com.fiap.ecoplay.enums.MotivoRecusa;
 import br.com.fiap.ecoplay.enums.Role;
 import br.com.fiap.ecoplay.enums.StatusEntrega;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -23,6 +25,7 @@ public class EntregaService {
     private final UsuarioRepository usuarioRepository;
     private final PontoDescarteRepository pontoRepository;
     private final MaterialRepository materialRepository;
+    private final GamificacaoClient gamificacaoClient;
 
     @Transactional
     public EntregaResponse agendar(
@@ -191,8 +194,18 @@ public class EntregaService {
         validarStatus(entrega, StatusEntrega.CONFIRMADA);
 
         entrega.setStatus(StatusEntrega.CONCLUIDA);
+        Entrega concluida = entregaRepository.save(entrega);
 
-        return converter(entregaRepository.save(entrega));
+        List<EntregaItem> itens = buscarItens(concluida);
+        BigDecimal pesoTotal = itens.stream()
+                .map(EntregaItem::getPesoKg)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        boolean residuoEspecial = itens.stream()
+                .anyMatch(item -> item.getMaterial().getCategoria() == CategoriaMaterial.ESPECIAL);
+        gamificacaoClient.creditarEntrega(
+                concluida.getId(), concluida.getCidadao().getId(), pesoTotal, residuoEspecial);
+
+        return converter(concluida);
     }
 
     private Entrega buscarEntidade(Long id) {
