@@ -98,7 +98,7 @@ O projeto se relaciona especialmente com os **ODS 4, 10, 11, 12 e 13** da ONU.
 
 O fluxo usa a classe retornada pela MobileNetV2 Python, já vinculada a uma identificação do cidadão. O Java converte as seis classes suportadas (`cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`) em nomes em português e envia apenas esse rótulo ao modelo generativo. O prompt restringe a resposta a orientações curtas, impede a invenção de regras locais e pede que incertezas sobre contaminação ou composição sejam explicitadas.
 
-Configure `SPRING_AI_OPENAI_API_KEY` e `SPRING_AI_MODEL_CHAT=openai` como variáveis de ambiente; opcionalmente, escolha outro modelo com `OPENAI_MODEL` (padrão `gpt-5.4-mini`). Sem essas variáveis, o restante da API Java inicia sem ativar o modelo e o endpoint de orientação retorna indisponibilidade. Nunca salve a chave no repositório. Chamadas ao provedor podem ter custo e dependem de rede.
+Configure `GOOGLE_API_KEY` e `SPRING_AI_MODEL_CHAT=google-genai` como variáveis de ambiente; opcionalmente, escolha outro modelo com `GEMINI_MODEL` (padrão `gemini-3.6-flash`). Sem essas variáveis, o restante da API Java inicia sem ativar o modelo e o endpoint de orientação retorna indisponibilidade. Nunca salve a chave no repositório. Chamadas ao provedor podem ter custo e dependem de rede.
 
 Exemplo após classificar uma imagem e receber o ID da identificação:
 
