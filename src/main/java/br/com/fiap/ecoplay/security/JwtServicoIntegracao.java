@@ -33,6 +33,8 @@ public class JwtServicoIntegracao {
                 .issuedAt(agora)
                 .expiresAt(agora.plus(Duration.ofMinutes(5)))
                 .subject(usuarioId)
+                .claim("userId", usuarioId)
+                .claim("role", "SISTEMA")
                 .claim("papel", "SISTEMA")
                 .build();
 

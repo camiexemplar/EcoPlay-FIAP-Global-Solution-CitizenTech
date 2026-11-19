@@ -24,8 +24,8 @@ public class JwtService {
     @Value("${app.jwt.issuer}")
     private String issuer;
 
-    @Value("${integration.dotnet.audience:ecoplay-services}")
-    private String serviceAudience;
+    @Value("${app.jwt.audience}")
+    private String audience;
 
     public String gerarToken(Usuario usuario) {
 
@@ -33,11 +33,11 @@ public class JwtService {
 
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
-                .audience(List.of(serviceAudience))
                 .issuedAt(agora)
                 .expiresAt(agora.plus(Duration.ofHours(2)))
                 .subject(usuario.getId().toString())
                 .claim("userId", usuario.getId())
+                .audience(List.of(audience))
                 .claim("role", usuario.getRole().name())
                 .claim("papel", usuario.getRole().name());
 

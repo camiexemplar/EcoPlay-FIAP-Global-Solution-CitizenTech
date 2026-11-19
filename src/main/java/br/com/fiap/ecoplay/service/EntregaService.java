@@ -1,6 +1,7 @@
 package br.com.fiap.ecoplay.service;
 import br.com.fiap.ecoplay.dto.*;
 import br.com.fiap.ecoplay.entity.*;
+import br.com.fiap.ecoplay.enums.CategoriaMaterial;
 import br.com.fiap.ecoplay.enums.MotivoRecusa;
 import br.com.fiap.ecoplay.enums.Role;
 import br.com.fiap.ecoplay.enums.StatusEntrega;
@@ -219,10 +220,15 @@ public class EntregaService {
     }
 
     private void agendarCreditoGamificacao(Entrega entrega) {
-        BigDecimal pesoTotal = itemRepository.findByEntregaId(entrega.getId()).stream()
+        List<EntregaItem> itens = itemRepository.findByEntregaId(entrega.getId());
+        BigDecimal pesoTotal = itens.stream()
                 .map(EntregaItem::getPesoKg)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        boolean residuoEspecial = itens.stream()
+                .map(EntregaItem::getMaterial)
+                .filter(Objects::nonNull)
+                .anyMatch(material -> material.getCategoria() == CategoriaMaterial.ESPECIAL);
         if (pesoTotal.signum() <= 0) {
             log.warn("Entrega {} concluída sem peso; crédito de gamificação não enviado.",
                     entrega.getId());
@@ -236,7 +242,7 @@ public class EntregaService {
                     @Override
                     public void afterCommit() {
                         gamificacaoClient.creditarEntrega(
-                                usuarioId, entregaId, pesoTotal);
+                                usuarioId, entregaId, pesoTotal, residuoEspecial);
                     }
                 });
     }

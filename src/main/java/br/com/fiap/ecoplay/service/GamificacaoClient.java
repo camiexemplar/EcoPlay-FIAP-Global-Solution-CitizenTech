@@ -27,22 +27,16 @@ public class GamificacaoClient {
 
     public void creditarIdentificacao(Long usuarioId, Long identificacaoId) {
         String referencia = "identificacao-" + identificacaoId;
-        creditar(
-                usuarioId,
-                "IDENTIFICACAO",
-                referencia,
-                null,
-                "identificacao-" + identificacaoId);
+        creditar(usuarioId, "IDENTIFICACAO", referencia, null, false, referencia);
     }
 
-    public void creditarEntrega(Long usuarioId, Long entregaId, BigDecimal pesoKg) {
+    public void creditarEntrega(
+            Long usuarioId,
+            Long entregaId,
+            BigDecimal pesoKg,
+            boolean residuoEspecial) {
         String referencia = "entrega-" + entregaId;
-        creditar(
-                usuarioId,
-                "ENTREGA",
-                referencia,
-                pesoKg,
-                "entrega-" + entregaId);
+        creditar(usuarioId, "ENTREGA", referencia, pesoKg, residuoEspecial, referencia);
     }
 
     private void creditar(
@@ -50,6 +44,7 @@ public class GamificacaoClient {
             String origem,
             String referencia,
             BigDecimal pesoKg,
+            boolean residuoEspecial,
             String chaveIdempotencia) {
         try {
             client.post()
@@ -58,7 +53,7 @@ public class GamificacaoClient {
                             "Bearer " + jwtServico.gerarToken(usuarioId.toString()))
                     .header("Idempotency-Key", chaveIdempotencia)
                     .body(new CreditoGamificacaoRequest(
-                            usuarioId.toString(), origem, referencia, pesoKg, false))
+                            usuarioId.toString(), origem, referencia, pesoKg, residuoEspecial))
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientException erro) {
