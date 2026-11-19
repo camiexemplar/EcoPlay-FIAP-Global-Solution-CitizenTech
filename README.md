@@ -307,11 +307,32 @@ Integrações da solução (serviços separados):
   - RabbitMQ: comunicação assíncrona entre serviços
 ```
 
+### Integração Python e .NET
+
+- `POST /api/identificacoes/classificar?usuarioId={id}` recebe um arquivo multipart no campo `image`, encaminha-o para `AI_API_BASE_URL/classificar` e registra a classe/confiança retornadas. A classe retornada pela IA precisa existir em `material_eco.classe_modelo` (`cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`). O cidadão revisa o resultado antes de confirmar.
+- `PATCH /api/identificacoes/{id}/confirmar?usuarioId={id}` com `{"confirmadaPeloUsuario": true}` envia um crédito de identificação ao .NET após o commit da transação Java.
+- `PUT /api/entregas/{id}/concluir?cooperativaId={id}` envia o peso total da entrega concluída ao .NET após o commit Java.
+- Os créditos usam JWT RS256 com `iss=ecoplay-java`, `aud=ecoplay-services` e `papel=SISTEMA`, além de um `Idempotency-Key` estável por evento. Uma repetição da confirmação pode tentar novamente o envio sem duplicar XP.
+- Se o .NET estiver indisponível, o estado Java é mantido e o erro é registrado no log; repetir a confirmação/conclusão tenta reenviar o mesmo evento idempotente.
+
+Para executar localmente, inicie os serviços Python e .NET e configure no Run Configuration do IntelliJ:
+
+```text
+AI_API_BASE_URL=http://localhost:8000
+DOTNET_API_BASE_URL=http://localhost:5033
+DOTNET_JWT_ISSUER=ecoplay-java
+DOTNET_JWT_AUDIENCE=ecoplay-services
+JWT_PRIVATE_KEY_PATH=classpath:keys/private_key.pem
+JWT_PUBLIC_KEY_PATH=classpath:keys/public_key.pem
+```
+
+Configure também as variáveis Oracle usadas pelo Java e, no processo .NET, `Jwt__PublicKeyPem` com o conteúdo da chave pública correspondente. Os arquivos PEM e valores de banco são locais e não devem ser commitados. O JWT de usuário agora também inclui `sub` numérico, `papel` e `aud` para compatibilidade com as políticas .NET; faça login novamente após atualizar a API.
+
 ### Situação das integrações
 
-- **Java:** endpoints e regras de negócio testados manualmente pelo Postman.
-- **Python:** reconhecimento de resíduos por imagem previsto na arquitetura; integração ponta a ponta a validar.
-- **.NET:** gamificação e recompensas previstas na arquitetura; integração ponta a ponta a validar.
+- **Java:** endpoints e regras de negócio existentes.
+- **Python:** a rota de classificação encaminha imagens ao serviço FastAPI.
+- **.NET:** créditos idempotentes de identificação confirmada e entrega concluída.
 - **RabbitMQ:** dependência presente no backend; publicação/consumo de eventos entre serviços ainda exige validação específica.
 - **Mobile:** aplicação cliente prevista para consumir a API REST.
 

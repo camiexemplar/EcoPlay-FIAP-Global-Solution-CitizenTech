@@ -6,14 +6,20 @@ import br.com.fiap.ecoplay.enums.Role;
 import br.com.fiap.ecoplay.enums.StatusEntrega;
 import br.com.fiap.ecoplay.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EntregaService {
@@ -23,6 +29,7 @@ public class EntregaService {
     private final UsuarioRepository usuarioRepository;
     private final PontoDescarteRepository pontoRepository;
     private final MaterialRepository materialRepository;
+    private final GamificacaoClient gamificacaoClient;
 
     @Transactional
     public EntregaResponse agendar(
@@ -48,6 +55,15 @@ public class EntregaService {
         if (request.itens() == null || request.itens().isEmpty()) {
             throw new IllegalArgumentException(
                     "Informe pelo menos um material");
+        }
+
+        BigDecimal pesoTotal = request.itens().stream()
+                .map(EntregaItemRequest::pesoKg)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (pesoTotal.compareTo(BigDecimal.valueOf(200)) > 0) {
+            throw new IllegalArgumentException(
+                    "O peso total da entrega deve ser de até 200 kg");
         }
 
         Entrega entrega = new Entrega();
@@ -188,11 +204,41 @@ public class EntregaService {
     public EntregaResponse concluir(Long id, Long cooperativaId) {
         Entrega entrega = buscarEntidade(id);
         validarCooperativa(entrega, cooperativaId);
+
+        if (entrega.getStatus() == StatusEntrega.CONCLUIDA) {
+            agendarCreditoGamificacao(entrega);
+            return converter(entrega);
+        }
+
         validarStatus(entrega, StatusEntrega.CONFIRMADA);
 
         entrega.setStatus(StatusEntrega.CONCLUIDA);
+        Entrega salva = entregaRepository.save(entrega);
+        agendarCreditoGamificacao(salva);
+        return converter(salva);
+    }
 
-        return converter(entregaRepository.save(entrega));
+    private void agendarCreditoGamificacao(Entrega entrega) {
+        BigDecimal pesoTotal = itemRepository.findByEntregaId(entrega.getId()).stream()
+                .map(EntregaItem::getPesoKg)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (pesoTotal.signum() <= 0) {
+            log.warn("Entrega {} concluída sem peso; crédito de gamificação não enviado.",
+                    entrega.getId());
+            return;
+        }
+
+        Long usuarioId = entrega.getCidadao().getId();
+        Long entregaId = entrega.getId();
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        gamificacaoClient.creditarEntrega(
+                                usuarioId, entregaId, pesoTotal);
+                    }
+                });
     }
 
     private Entrega buscarEntidade(Long id) {

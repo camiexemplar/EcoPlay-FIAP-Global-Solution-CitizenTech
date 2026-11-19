@@ -1,11 +1,3 @@
-/**
- * TODO (INTEGRACAO IA - .NET/PYTHON):
- * Utilizar este repository para persistir e consultar
- * as identificacoes recebidas dos servicos externos.
- *
- * A integracao sera implementada posteriormente.
- */
-
 package br.com.fiap.ecoplay.repository;
 
 import br.com.fiap.ecoplay.entity.Identificacao;

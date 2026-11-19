@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,18 +24,28 @@ public class JwtService {
     @Value("${app.jwt.issuer}")
     private String issuer;
 
+    @Value("${integration.dotnet.audience:ecoplay-services}")
+    private String serviceAudience;
+
     public String gerarToken(Usuario usuario) {
 
         Instant agora = Instant.now();
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
+                .audience(List.of(serviceAudience))
                 .issuedAt(agora)
                 .expiresAt(agora.plus(Duration.ofHours(2)))
-                .subject(usuario.getEmail())
+                .subject(usuario.getId().toString())
                 .claim("userId", usuario.getId())
                 .claim("role", usuario.getRole().name())
-                .build();
+                .claim("papel", usuario.getRole().name());
+
+        if (usuario.getBairro() != null) {
+            claimsBuilder.claim("bairro", usuario.getBairro());
+        }
+
+        JwtClaimsSet claims = claimsBuilder.build();
 
         JwsHeader header = JwsHeader
                 .with(SignatureAlgorithm.RS256)

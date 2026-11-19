@@ -2,6 +2,8 @@ package br.com.fiap.ecoplay.service;
 import br.com.fiap.ecoplay.dto.ConfirmacaoIdentificacaoRequest;
 import br.com.fiap.ecoplay.dto.IdentificacaoRequest;
 import br.com.fiap.ecoplay.dto.IdentificacaoResponse;
+import br.com.fiap.ecoplay.dto.RespostaClassificador;
+import br.com.fiap.ecoplay.dto.ResultadoClassificacaoResponse;
 import br.com.fiap.ecoplay.entity.Identificacao;
 import br.com.fiap.ecoplay.entity.Material;
 import br.com.fiap.ecoplay.entity.Usuario;
@@ -13,6 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
@@ -24,6 +30,7 @@ public class IdentificacaoService {
     private final IdentificacaoRepository identificacaoRepository;
     private final MaterialRepository materialRepository;
     private final UsuarioRepository usuarioRepository;
+    private final GamificacaoClient gamificacaoClient;
 
     @Transactional
     public IdentificacaoResponse registrar(
@@ -51,6 +58,28 @@ public class IdentificacaoService {
         identificacao.setConfirmadaPeloUsuario(false);
 
         return converter(identificacaoRepository.save(identificacao));
+    }
+
+    @Transactional
+    public ResultadoClassificacaoResponse registrarClassificada(
+            Long usuarioId,
+            RespostaClassificador classificacao) {
+        Material material = materialRepository
+                .findByClasseModeloIgnoreCase(classificacao.classe())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Não há material cadastrado para a classe de IA: "
+                                + classificacao.classe()));
+
+        BigDecimal confianca = BigDecimal.valueOf(classificacao.confianca());
+        IdentificacaoResponse identificacao = registrar(
+                usuarioId,
+                new IdentificacaoRequest(material.getId(), confianca));
+
+        return new ResultadoClassificacaoResponse(
+                identificacao,
+                classificacao.classe(),
+                classificacao.probabilidades());
     }
 
     @Transactional(readOnly = true)
@@ -88,10 +117,23 @@ public class IdentificacaoService {
                     "A confirmação é obrigatória");
         }
 
-        identificacao.setConfirmadaPeloUsuario(
-                request.confirmadaPeloUsuario());
+        identificacao.setConfirmadaPeloUsuario(request.confirmadaPeloUsuario());
+        Identificacao salva = identificacaoRepository.save(identificacao);
 
-        return converter(identificacaoRepository.save(identificacao));
+        if (Boolean.TRUE.equals(request.confirmadaPeloUsuario())) {
+            Long usuarioIdConfirmado = identificacao.getUsuario().getId();
+            Long identificacaoId = identificacao.getId();
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            gamificacaoClient.creditarIdentificacao(
+                                    usuarioIdConfirmado, identificacaoId);
+                        }
+                    });
+        }
+
+        return converter(salva);
     }
 
     private Identificacao buscarEntidade(Long id) {
