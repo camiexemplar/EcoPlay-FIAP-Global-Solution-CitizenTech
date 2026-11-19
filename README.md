@@ -41,6 +41,7 @@ O projeto se relaciona especialmente com os **ODS 4, 10, 11, 12 e 13** da ONU.
 | Spring Web MVC | Controllers e requisições HTTP |
 | Spring Data JPA / Hibernate | Persistência de entidades |
 | Spring Security | Autenticação e autorização |
+| Spring AI | Geração de orientações educativas de descarte a partir de identificações salvas |
 | JWT com RSA | Tokens de acesso assinados |
 | Bean Validation | Validação dos dados recebidos |
 | Oracle Database | Banco de dados relacional |
@@ -50,7 +51,7 @@ O projeto se relaciona especialmente com os **ODS 4, 10, 11, 12 e 13** da ONU.
 | Maven Wrapper | Gerenciamento e execução do projeto |
 | Postman | Testes manuais dos endpoints |
 
-> **Nota:** ter a dependência do RabbitMQ no projeto não significa que a publicação e o consumo de eventos entre serviços já foram validados. O mesmo vale para a integração com IA e gamificação.
+> **Nota:** ter a dependência do RabbitMQ no projeto não significa que a publicação e o consumo de eventos entre serviços já foram validados. A chamada generativa Spring AI é descrita abaixo; o teste com o provedor exige uma chave e conectividade externa.
 
 ## ✅ Funcionalidades do backend Java
 
@@ -88,8 +89,25 @@ O projeto se relaciona especialmente com os **ODS 4, 10, 11, 12 e 13** da ONU.
 - Armazenamento do nível de confiança informado.
 - Consulta por ID e histórico por usuário.
 - Confirmação do resultado pelo cidadão.
+- Envio de imagem ao classificador Python pelo endpoint `/api/identificacoes/classificar`.
+- Geração de orientação educativa pelo Spring AI a partir da classe salva, por `POST /api/identificacoes/{id}/orientacao`.
 
-> **Importante:** os endpoints Java de identificação registram e consultam resultados. Eles **não comprovam, por si só, o envio de uma imagem para o microsserviço Python**.
+> A orientação generativa é texto educativo geral. Não substitui as regras municipais nem garante que um item específico seja aceito por uma cooperativa.
+
+### IA generativa (Spring AI)
+
+O fluxo usa a classe retornada pela MobileNetV2 Python, já vinculada a uma identificação do cidadão. O Java converte as seis classes suportadas (`cardboard`, `glass`, `metal`, `paper`, `plastic`, `trash`) em nomes em português e envia apenas esse rótulo ao modelo generativo. O prompt restringe a resposta a orientações curtas, impede a invenção de regras locais e pede que incertezas sobre contaminação ou composição sejam explicitadas.
+
+Configure `SPRING_AI_OPENAI_API_KEY` e `SPRING_AI_MODEL_CHAT=openai` como variáveis de ambiente; opcionalmente, escolha outro modelo com `OPENAI_MODEL` (padrão `gpt-5.4-mini`). Sem essas variáveis, o restante da API Java inicia sem ativar o modelo e o endpoint de orientação retorna indisponibilidade. Nunca salve a chave no repositório. Chamadas ao provedor podem ter custo e dependem de rede.
+
+Exemplo após classificar uma imagem e receber o ID da identificação:
+
+```http
+POST /api/identificacoes/123/orientacao?usuarioId=45
+Authorization: Bearer <jwt-do-cidadao>
+```
+
+A rota só permite ao cidadão consultar a própria identificação. O modelo não recebe imagem, nome, e-mail ou outros dados pessoais; recebe apenas o nome da classe de resíduo.
 
 ## 🔐 Segurança
 
@@ -155,7 +173,9 @@ Os retornos HTTP tratados incluem validações (`400`), ausência de autenticaç
 | Método | Rota | Descrição |
 |---|---|---|
 | POST | `/api/identificacoes?usuarioId={id}` | Registrar identificação |
+| POST | `/api/identificacoes/classificar?usuarioId={id}` | Classificar imagem com a API Python e salvar identificação |
 | GET | `/api/identificacoes/{id}?usuarioId={id}` | Consultar identificação |
+| POST | `/api/identificacoes/{id}/orientacao?usuarioId={id}` | Gerar orientação de descarte com Spring AI |
 | GET | `/api/identificacoes/usuario/{id}` | Listar identificações do usuário |
 | PATCH | `/api/identificacoes/{id}/confirmar?usuarioId={id}` | Confirmar identificação |
 
