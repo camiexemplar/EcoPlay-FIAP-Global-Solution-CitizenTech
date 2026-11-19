@@ -1,12 +1,3 @@
-/**
- * TODO (INTEGRACAO IA - .NET/PYTHON):
- * Integrar os resultados da identificacao de materiais.
- * Esta entidade armazena o material identificado, a confianca
- * da IA e a confirmacao realizada pelo usuario.
- *
- * Responsavel: equipe de integracao .NET/Python.
- */
-
 package br.com.fiap.ecoplay.entity;
 
 import jakarta.persistence.*;

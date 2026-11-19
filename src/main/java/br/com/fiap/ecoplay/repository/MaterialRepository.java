@@ -13,4 +13,6 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByCategoria(CategoriaMaterial categoria);
 
     Optional<Material> findByClasseModelo(String classeModelo);
+
+    Optional<Material> findByClasseModeloIgnoreCase(String classeModelo);
 }

@@ -31,16 +31,21 @@ public class JwtService {
 
         Instant agora = Instant.now();
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(agora)
                 .expiresAt(agora.plus(Duration.ofHours(2)))
-                .subject(usuario.getEmail())
+                .subject(usuario.getId().toString())
                 .claim("userId", usuario.getId())
                 .audience(List.of(audience))
                 .claim("role", usuario.getRole().name())
-                .claim("papel", usuario.getRole().name())
-                .build();
+                .claim("papel", usuario.getRole().name());
+
+        if (usuario.getBairro() != null) {
+            claimsBuilder.claim("bairro", usuario.getBairro());
+        }
+
+        JwtClaimsSet claims = claimsBuilder.build();
 
         JwsHeader header = JwsHeader
                 .with(SignatureAlgorithm.RS256)
