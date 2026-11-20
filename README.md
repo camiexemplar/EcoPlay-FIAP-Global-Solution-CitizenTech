@@ -385,6 +385,8 @@ src/main/
 | Eduarda Weiss Ventura | RM564434 |
 | Camily Vitoria Pereira Maciel | RM566520 |
 | Lucas Nunes Soares | RM566503 |
+| Maria Gabriela Landim Severo | RM565146 |
+| Samara Porto Souza | RM559072 |
 
 ## 📌 Repositório
 
